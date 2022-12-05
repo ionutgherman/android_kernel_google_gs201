@@ -132,11 +132,6 @@ static inline unsigned long uclamp_task_util(struct task_struct *p)
 }
 #endif
 
-static inline unsigned long capacity_of(int cpu)
-{
-	return cpu_rq(cpu)->cpu_capacity;
-}
-
 /* Runqueue only has SCHED_IDLE tasks enqueued */
 static int sched_idle_rq(struct rq *rq)
 {
