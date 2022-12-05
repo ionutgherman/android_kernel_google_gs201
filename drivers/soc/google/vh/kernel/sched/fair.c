@@ -456,7 +456,9 @@ struct vendor_group_property *get_vendor_group_property(enum vendor_group group)
 
 static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 {
-	unsigned long task_util;
+	unsigned long uclamp_min = uclamp_eff_value(p, UCLAMP_MIN);
+	unsigned long uclamp_max = uclamp_eff_value(p, UCLAMP_MAX);
+	unsigned long task_util = task_util_est(p);
 	bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
                             && (uclamp_boosted(p) || get_prefer_high_cap(p));
 
@@ -466,7 +468,13 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 	if ((is_important || sync_boost) && cpu < MID_CAPACITY_CPU)
 		return false;
 
-	task_util = get_task_spreading(p) ? task_util_est(p) : uclamp_task_util(p);
+	/*
+	 * Ignore uclamp if spreading the task
+	 */
+	if (get_task_spreading(p)) {
+		uclamp_min = uclamp_none(UCLAMP_MIN);
+		uclamp_max = uclamp_none(UCLAMP_MAX);
+	}
 
 #if IS_ENABLED(CONFIG_USE_GROUP_THROTTLE)
 	/* clamp task utilization against its per-cpu group limit */
@@ -474,7 +482,7 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 							arch_scale_cpu_capacity(cpu)));
 #endif
 
-	return capacity_of(cpu) * SCHED_CAPACITY_SCALE > task_util * get_sched_capacity_margin(cpu);
+	return util_fits_cpu(task_util, uclamp_min, uclamp_max, cpu);
 }
 
 static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu) {
