@@ -300,8 +300,6 @@ static inline unsigned int get_group_throttle(struct task_group *tg)
 void init_vendor_group_data(void)
 {
 	int i;
-	struct vendor_task_struct *v_tsk;
-	struct task_struct *p, *t;
 
 	for (i = 0; i < VG_MAX; i++) {
 		INIT_LIST_HEAD(&vendor_group_list[i].list);
