@@ -1990,7 +1990,8 @@ EXPORT_SYMBOL_GPL(vh_arch_set_freq_scale_pixel_mod);
 
 void rvh_set_iowait_pixel_mod(void *data, struct task_struct *p, int *should_iowait_boost)
 {
-	*should_iowait_boost = p->in_iowait && uclamp_boosted(p);
+	bool prefer_idle = get_prefer_idle(p), prefer_high_cap = get_prefer_high_cap(p);
+	*should_iowait_boost = p->in_iowait && uclamp_boosted(p) && prefer_idle && prefer_high_cap;
 }
 
 void rvh_cpu_overutilized_pixel_mod(void *data, int cpu, int *overutilized)
