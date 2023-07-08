@@ -1400,7 +1400,8 @@ void rvh_cpumask_any_and_distribute(void *data, struct task_struct *p,
 {
 	cpumask_t valid_mask;
 
-	cpumask_and(&valid_mask, cpu_valid_mask, new_mask);
+	if (unlikely(!cpumask_and(&valid_mask, cpu_valid_mask, new_mask)))
+		goto out;
 
 	/* find a cpu again for the running/runnable/waking tasks if their
 	 * current cpu are not allowed
@@ -1410,6 +1411,7 @@ void rvh_cpumask_any_and_distribute(void *data, struct task_struct *p,
 		*dest_cpu = find_energy_efficient_cpu(p, task_cpu(p),
 						      &valid_mask);
 
+out:
 	trace_cpumask_any_and_distribute(p, &valid_mask, *dest_cpu);
 
 	return;
