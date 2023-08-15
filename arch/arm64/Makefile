@@ -37,11 +37,11 @@ endif
 ifeq ($(cc-name),clang)
 KBUILD_CFLAGS   += -mcpu=cortex-a55
 KBUILD_AFLAGS   += -mcpu=cortex-a55
-KBUILD_CFLAGS   += -march=armv8.2-a+crypto+crc -mtune=cortex-a55 -mcpu=cortex-a55
-KBUILD_AFLAGS   += -march=armv8.2-a+crypto+crc -mtune=cortex-a55 -mcpu=cortex-a55
+KBUILD_CFLAGS   += -march=armv8.2-a+dotprod -mtune=cortex-a55 -mcpu=cortex-a55
+KBUILD_AFLAGS   += -march=armv8.2-a+dotprod -mtune=cortex-a55 -mcpu=cortex-a55
 ifeq ($(CONFIG_LD_IS_LLD), y)
 KBUILD_LDFLAGS  += -mllvm -mcpu=cortex-a55
-KBUILD_LDFLAGS  += -mllvm -march=armv8.2-a+crypto+crc -mtune=cortex-a55 -mcpu=cortex-a55
+KBUILD_LDFLAGS  += -mllvm -march=armv8.2-a+dotprod -mtune=cortex-a55 -mcpu=cortex-a55
 endif
 endif
 
