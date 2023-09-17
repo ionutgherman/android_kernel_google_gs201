@@ -762,14 +762,14 @@ KBUILD_CFLAGS += -Os
 endif
 
 ifeq ($(cc-name),clang)
-KBUILD_CFLAGS   += -mcpu=cortex-a55
-KBUILD_AFLAGS   += -mcpu=cortex-a55
-KBUILD_CFLAGS   += -march=armv8.2-a+dotprod -mtune=cortex-a55 -mcpu=cortex-a55
-KBUILD_AFLAGS   += -march=armv8.2-a+dotprod -mtune=cortex-a55 -mcpu=cortex-a55
-ifeq ($(CONFIG_LD_IS_LLD), y)
-KBUILD_LDFLAGS  += -mllvm -mcpu=cortex-a55
-KBUILD_LDFLAGS  += -mllvm -march=armv8.2-a+dotprod -mtune=cortex-a55 -mcpu=cortex-a55
-endif
+    COMMON_FLAGS := -mcpu=cortex-a55 -march=armv8.2-a+crypto+dotprod -mtune=cortex-a55 -O3 -mfpu=neon-fp-armv8 -funroll-loops -finline-functions
+
+    KBUILD_CFLAGS += $(COMMON_FLAGS)
+    KBUILD_AFLAGS += $(COMMON_FLAGS)
+
+    ifeq ($(CONFIG_LD_IS_LLD), y)
+        KBUILD_LDFLAGS += -mllvm $(COMMON_FLAGS)
+    endif
 endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
