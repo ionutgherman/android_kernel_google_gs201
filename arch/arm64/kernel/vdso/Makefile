@@ -30,6 +30,13 @@ ldflags-y := -shared -nostdlib -soname=linux-vdso.so.1 --hash-style=sysv	\
 ccflags-y := -fno-common -fno-builtin -fno-stack-protector -ffixed-x18
 ccflags-y += -DDISABLE_BRANCH_PROFILING -DBUILD_VDSO
 
+ifeq ($(cc-name),clang)
+    COMMON_FLAGS := -mcpu=cortex-a55 -march=armv8.2-a+crypto+dotprod -mtune=cortex-a55 -O3 -mfpu=neon-fp-armv8 -funroll-loops -finline-functions
+
+    VDSO_CFLAGS += $(COMMON_FLAGS)
+    ccflags-y += $(COMMON_FLAGS)
+endif
+
 CFLAGS_REMOVE_vgettimeofday.o = $(CC_FLAGS_FTRACE) -Os $(CC_FLAGS_SCS) $(GCC_PLUGINS_CFLAGS) \
 				$(CC_FLAGS_LTO)
 KASAN_SANITIZE			:= n

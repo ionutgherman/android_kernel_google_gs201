@@ -51,3 +51,7 @@ obj-$(CONFIG_CRYPTO_DEV_ARTPEC6) += axis/
 obj-$(CONFIG_CRYPTO_DEV_ZYNQMP_AES) += xilinx/
 obj-y += hisilicon/
 obj-$(CONFIG_CRYPTO_DEV_AMLOGIC_GXL) += amlogic/
+
+ifeq ($(cc-name),clang)
+ccflags-y += -mcpu=cortex-a55 -march=armv8.2-a+crypto+dotprod -mtune=cortex-a55 -O3 -mfpu=neon-fp-armv8 -funroll-loops -finline-functions
+endif
