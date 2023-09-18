@@ -802,6 +802,7 @@ unsigned int exynos_dm_constraint_freq(int cpu, unsigned int freq)
 
 	return 0;
 }
+EXPORT_SYMBOL(exynos_dm_constraint_freq);
 
 /*********************************************************************
  *                      SUPPORT for DVFS MANAGER                     *
