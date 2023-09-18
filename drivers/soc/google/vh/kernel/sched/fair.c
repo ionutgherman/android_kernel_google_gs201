@@ -443,11 +443,12 @@ struct vendor_group_property *get_vendor_group_property(enum vendor_group group)
 static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 {
 	unsigned long task_util;
+	bool boosted = get_prefer_high_cap(p) || uclamp_boosted(p);
 
 	if (cpu >= MAX_CAPACITY_CPU)
 		return true;
 
-	if ((get_prefer_high_cap(p) || sync_boost) && cpu < MID_CAPACITY_CPU)
+	if ((boosted || sync_boost) && cpu < MID_CAPACITY_CPU)
 		return false;
 
 	task_util = get_task_spreading(p) ? task_util_est(p) : uclamp_task_util(p);
@@ -461,21 +462,19 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 	return capacity_of(cpu) * SCHED_CAPACITY_SCALE > task_util * sched_capacity_margin[cpu];
 }
 
-static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu)
-{
-	int first_cpu, next_usable_cpu;
-	bool prefer_idle = get_prefer_idle(p), prefer_high_cap = get_prefer_high_cap(p);
+static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu) {
+    bool prefer_idle = get_prefer_idle(p);
+    bool boosted = uclamp_boosted(p) || get_prefer_high_cap(p);
+    int first_cpu, next_usable_cpu;
+    
+    if (prefer_idle) {
+        first_cpu = boosted ? MAX_CAPACITY_CPU : MID_CAPACITY_CPU;
+    } else {
+        first_cpu = MIN_CAPACITY_CPU;
+    }
 
-	if ((prefer_idle || prefer_high_cap) && uclamp_boosted(p)) {
-		first_cpu = HIGH_CAPACITY_CPU;
-	} else if ((prefer_idle || prefer_high_cap) && !uclamp_boosted(p)) {
-		first_cpu = MID_CAPACITY_CPU;
-	} else {
-		first_cpu = MIN_CAPACITY_CPU;
-	}
-
-	next_usable_cpu = cpumask_next(first_cpu - 1, p->cpus_ptr);
-	return cpu >= next_usable_cpu || next_usable_cpu >= nr_cpu_ids;
+    next_usable_cpu = cpumask_next(first_cpu - 1, p->cpus_ptr);
+    return cpu >= next_usable_cpu || next_usable_cpu >= nr_cpu_ids;
 }
 
 /**
@@ -1074,8 +1073,8 @@ EXPORT_SYMBOL_GPL(vh_arch_set_freq_scale_pixel_mod);
 
 void rvh_set_iowait_pixel_mod(void *data, struct task_struct *p, int *should_iowait_boost)
 {
-	bool prefer_idle = get_prefer_idle(p), prefer_high_cap = get_prefer_high_cap(p);
-	*should_iowait_boost = p->in_iowait && uclamp_boosted(p) && prefer_idle && prefer_high_cap;
+	bool prefer_idle = get_prefer_idle(p), boosted = get_prefer_high_cap(p) || uclamp_boosted(p);
+	*should_iowait_boost = p->in_iowait && prefer_idle && boosted;
 }
 
 void rvh_cpu_overutilized_pixel_mod(void *data, int cpu, int *overutilized)
@@ -1504,14 +1503,14 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 				// if task is fit for new cpu but not old cpu
 				// stop if we found an ADPF UI task
 				// use it as backup if we found a boost task
-				if (is_ui) {
+				if (is_ui || is_boost) {
 					best_task = p;
 					break;
 				}
 
 				backup = p;
 			} else {
-				if (is_ui) {
+				if (is_ui || is_boost) {
 					backup_ui = p;
 					continue;
 				}
@@ -1521,7 +1520,7 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 			}
 		} else {
 			// if new idle is not capable, use it as backup but not for UI task.
-			if (!is_ui)
+			if (!is_ui || !is_boost)
 				backup_unfit = p;
 		}
 
