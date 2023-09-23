@@ -943,13 +943,9 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu,
 		}
 	}
 
-	/* If no CPU fits, then place the task on the least utilized CPU */
-	if (l_util == ULONG_MAX) {
-		for_each_cpu(i, &allowed)
-			cpu_util_ratio(p, cap, exit_lat, i, prev_cpu, &best_cpu,
-				       &l_util);
-		goto check_prev;
-	}
+	/* If no CPU fits, then place the task on the minimum capacity CPU */
+	if (l_util == ULONG_MAX)
+		return MIN_CAPACITY_CPU;
 
 	/* Stop now if only one CPU fits */
 	if (cpumask_weight(&candidates) == 1)
