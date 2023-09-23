@@ -443,12 +443,13 @@ struct vendor_group_property *get_vendor_group_property(enum vendor_group group)
 static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 {
 	unsigned long task_util;
-	bool boosted = get_prefer_high_cap(p) || uclamp_boosted(p);
+	bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
+                            && (uclamp_boosted(p) || get_prefer_high_cap(p));
 
 	if (cpu >= MAX_CAPACITY_CPU)
 		return true;
 
-	if ((boosted || sync_boost) && cpu < MID_CAPACITY_CPU)
+	if ((is_important || sync_boost) && cpu < MID_CAPACITY_CPU)
 		return false;
 
 	task_util = get_task_spreading(p) ? task_util_est(p) : uclamp_task_util(p);
