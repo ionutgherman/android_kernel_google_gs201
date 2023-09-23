@@ -9,6 +9,8 @@
 #define CLUSTER_NUM         3
 #define UCLAMP_STATS_SLOTS  21
 #define UCLAMP_STATS_STEP   (100 / (UCLAMP_STATS_SLOTS - 1))
+#define MAX_UTIL_THRESHOLD  1575
+#define MID_UTIL_THRESHOLD  1462
 #define DEF_UTIL_THRESHOLD  1280
 #define DEF_UTIL_POST_INIT_SCALE  512
 #define C1_EXIT_LATENCY     1
@@ -31,7 +33,7 @@
 		      UCLAMP_BUCKETS - 1)
 
 #define cpu_overutilized(cap, max, cpu)	\
-		((cap) * sched_capacity_margin[cpu] > (max) << SCHED_CAPACITY_SHIFT)
+		((cap) * get_sched_capacity_margin(cpu) > (max) << SCHED_CAPACITY_SHIFT)
 
 #define lsub_positive(_ptr, _val) do {				\
 	typeof(_ptr) ptr = (_ptr);				\
@@ -140,6 +142,21 @@ static inline unsigned long _task_util_est(struct task_struct *p)
 static inline unsigned long task_util_est(struct task_struct *p)
 {
 	return max(task_util(p), _task_util_est(p));
+}
+
+static inline unsigned int get_sched_capacity_margin(int cpu)
+{
+    if (cpu >= 0 && cpu < CPU_NUM) {
+        unsigned int capacity_margin = DEF_UTIL_THRESHOLD;
+        if (cpu >= MID_CAPACITY_CPU && cpu < MAX_CAPACITY_CPU) {
+            capacity_margin = MID_UTIL_THRESHOLD;
+        } else if (cpu >= MAX_CAPACITY_CPU) {
+            capacity_margin = MAX_UTIL_THRESHOLD;
+        }
+        return capacity_margin;
+    } else {
+        return DEF_UTIL_THRESHOLD;
+    }
 }
 
 /*****************************************************************************/

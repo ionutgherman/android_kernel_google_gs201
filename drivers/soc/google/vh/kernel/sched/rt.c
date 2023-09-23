@@ -18,7 +18,6 @@ extern int cpu_is_idle(int cpu);
 extern int sched_cpu_idle(int cpu);
 extern bool get_prefer_high_cap(struct task_struct *p);
 
-extern unsigned int sched_capacity_margin[CPU_NUM];
 extern int ___update_load_sum(u64 now, struct sched_avg *sa,
 			      unsigned long load, unsigned long runnable, int running);
 extern int ___update_load_avg(struct sched_avg *sa, unsigned long load);
@@ -283,7 +282,7 @@ static inline bool rt_task_fits_capacity(struct task_struct *p, int cpu)
 	util = clamp(task_util(p), uclamp_eff_value(p, UCLAMP_MIN),
 		     uclamp_eff_value(p, UCLAMP_MAX));
 
-	return capacity_cap(cpu) * SCHED_CAPACITY_SCALE > util * sched_capacity_margin[cpu];
+	return capacity_cap(cpu) * SCHED_CAPACITY_SCALE > util * get_sched_capacity_margin(cpu);
 }
 
 static int find_lowest_rq(struct task_struct *p, struct cpumask *backup_mask)

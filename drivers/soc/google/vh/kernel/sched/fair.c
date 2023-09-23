@@ -460,7 +460,7 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 							arch_scale_cpu_capacity(cpu)));
 #endif
 
-	return capacity_of(cpu) * SCHED_CAPACITY_SCALE > task_util * sched_capacity_margin[cpu];
+	return capacity_of(cpu) * SCHED_CAPACITY_SCALE > task_util * get_sched_capacity_margin(cpu);
 }
 
 static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu) {
@@ -1078,7 +1078,7 @@ void rvh_cpu_overutilized_pixel_mod(void *data, int cpu, int *overutilized)
 unsigned long map_util_freq_pixel_mod(unsigned long util, unsigned long freq,
 				      unsigned long cap, int cpu)
 {
-	return (freq * sched_capacity_margin[cpu] >> SCHED_CAPACITY_SHIFT) * util / cap;
+	return (freq * get_sched_capacity_margin(cpu) >> SCHED_CAPACITY_SHIFT) * util / cap;
 }
 
 static inline bool check_uclamp_threshold(struct task_struct *p, enum uclamp_id clamp_id)
