@@ -2026,11 +2026,11 @@ unsigned long apply_dvfs_headroom(unsigned long util, int cpu, bool tapered)
 		headroom = (capacity - util);
 		/* formula: headroom * (1.X - 1) == headroom * 0.X */
 		headroom = headroom *
-			(sched_dvfs_headroom[cpu] - SCHED_CAPACITY_SCALE) >> SCHED_CAPACITY_SHIFT;
+			(get_sched_capacity_margin(cpu) - SCHED_CAPACITY_SCALE) >> SCHED_CAPACITY_SHIFT;
 		return util + headroom;
 	}
 
-	return util * sched_dvfs_headroom[cpu] >> SCHED_CAPACITY_SHIFT;
+	return util * get_sched_capacity_margin(cpu) >> SCHED_CAPACITY_SHIFT;
 }
 
 /*
