@@ -911,12 +911,13 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 	unsigned long uclamp_min = uclamp_eff_value(p, UCLAMP_MIN);
 	unsigned long uclamp_max = uclamp_eff_value(p, UCLAMP_MAX);
 	unsigned long task_util = task_util_est(p);
-	bool boosted = get_prefer_high_cap(p) || uclamp_boosted(p);
+	bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
+                            && (uclamp_boosted(p) || get_prefer_high_cap(p));
 
 	if (cpu >= MAX_CAPACITY_CPU)
 		return true;
 
-	if ((boosted || sync_boost) && cpu < MID_CAPACITY_CPU)
+	if ((is_important || sync_boost) && cpu < MID_CAPACITY_CPU)
 		return false;
 
 	/*
