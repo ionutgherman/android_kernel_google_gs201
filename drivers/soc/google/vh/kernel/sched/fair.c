@@ -2546,6 +2546,7 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 
 	list_for_each_entry_reverse(p, &src_rq->cfs_tasks, se.group_node) {
 		struct vendor_task_struct *vp = get_vendor_task_struct(p);
+		bool is_heavy_tasks = get_prefer_idle(p) || get_prefer_high_cap(p);
 		bool is_important = false;
 
 		if (!cpumask_test_cpu(dst_cpu, p->cpus_ptr))
@@ -2554,10 +2555,12 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 		if (task_running(src_rq, p))
 			continue;
 
-		if (!get_prefer_idle(p))
+		if (!is_heavy_tasks)
 			continue;
 
-		if (vp && vp->uclamp_fork_reset || uclamp_eff_value(p, UCLAMP_MIN) > 0)
+		if ((vp && vp->uclamp_fork_reset) 
+		    || uclamp_eff_value(p, UCLAMP_MIN) > 0 
+		    || is_heavy_tasks)
 			is_important = true;
 
 		if (!is_important)
