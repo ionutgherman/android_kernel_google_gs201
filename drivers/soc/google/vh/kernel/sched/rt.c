@@ -272,11 +272,13 @@ static inline bool rt_task_fits_uclamp_min(struct task_struct *p, int cpu)
 static inline bool rt_task_fits_capacity(struct task_struct *p, int cpu)
 {
 	unsigned long util;
+	bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
+                            && (uclamp_boosted(p) || get_prefer_high_cap(p));
 
 	if (cpu >= MAX_CAPACITY_CPU)
 		return true;
 
-	if (get_prefer_high_cap(p) && cpu < MID_CAPACITY_CPU)
+	if (is_important && cpu < MID_CAPACITY_CPU)
 		return false;
 
 	util = clamp(task_util(p), uclamp_eff_value(p, UCLAMP_MIN),
