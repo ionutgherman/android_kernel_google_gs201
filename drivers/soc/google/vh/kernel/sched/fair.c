@@ -1486,7 +1486,7 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 
 	list_for_each_entry_reverse(p, &src_rq->cfs_tasks, se.group_node) {
 		struct vendor_task_struct *vp = get_vendor_task_struct(p);
-		bool is_ui = false, is_boost = false;
+		bool is_important = false;
 
 		if (!cpumask_test_cpu(dst_cpu, p->cpus_ptr))
 			continue;
@@ -1497,27 +1497,25 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 		if (!get_prefer_idle(p))
 			continue;
 
-		if (vp && vp->uclamp_fork_reset)
-			is_ui = true;
-		else if (uclamp_eff_value(p, UCLAMP_MIN) > 0)
-			is_boost = true;
+		if (vp && vp->uclamp_fork_reset || uclamp_eff_value(p, UCLAMP_MIN) > 0)
+			is_important = true;
 
-		if (!is_ui && !is_boost)
+		if (!is_important)
 			continue;
 
 		if (task_fits_capacity(p, dst_cpu, false)) {
 			if (!task_fits_capacity(p, src_rq->cpu, false)) {
 				// if task is fit for new cpu but not old cpu
-				// stop if we found an ADPF UI task
-				// use it as backup if we found a boost task
-				if (is_ui || is_boost) {
+				// stop if we found an ADPF important task
+				// use it as backup if we found a important task
+				if (is_important) {
 					best_task = p;
 					break;
 				}
 
 				backup = p;
 			} else {
-				if (is_ui || is_boost) {
+				if (is_important) {
 					backup_ui = p;
 					continue;
 				}
@@ -1526,8 +1524,8 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 					backup = p;
 			}
 		} else {
-			// if new idle is not capable, use it as backup but not for UI task.
-			if (!is_ui || !is_boost)
+			// if new idle is not capable, use it as backup but not for important task.
+			if (!is_important)
 				backup_unfit = p;
 		}
 
