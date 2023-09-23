@@ -937,15 +937,11 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 }
 
 static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu) {
-    bool prefer_idle = get_prefer_idle(p);
-    bool boosted = uclamp_boosted(p) || get_prefer_high_cap(p);
+    bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
+                            && (uclamp_boosted(p) || get_prefer_high_cap(p));
     int first_cpu, next_usable_cpu;
     
-    if (prefer_idle) {
-        first_cpu = boosted ? MAX_CAPACITY_CPU : MID_CAPACITY_CPU;
-    } else {
-        first_cpu = MIN_CAPACITY_CPU;
-    }
+    first_cpu = (is_important) ? MID_CAPACITY_CPU : MIN_CAPACITY_CPU;
 
     next_usable_cpu = cpumask_next(first_cpu - 1, p->cpus_ptr);
     return cpu >= next_usable_cpu || next_usable_cpu >= nr_cpu_ids;
