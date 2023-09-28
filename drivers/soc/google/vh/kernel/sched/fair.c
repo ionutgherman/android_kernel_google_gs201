@@ -477,7 +477,7 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 							arch_scale_cpu_capacity(cpu)));
 #endif
 
-	return util_fits_cpu(task_util, uclamp_min, uclamp_max, cpu);
+	return rvh_util_fits_cpu(task_util, uclamp_min, uclamp_max, cpu);
 }
 
 static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu) {
@@ -1092,7 +1092,7 @@ void rvh_cpu_overutilized_pixel_mod(void *data, int cpu, int *overutilized)
 	unsigned long rq_util_min = uclamp_rq_get(cpu_rq(cpu), UCLAMP_MIN);
 	unsigned long rq_util_max = uclamp_rq_get(cpu_rq(cpu), UCLAMP_MAX);
 
-	*overutilized = !util_fits_cpu(cpu_util(cpu), rq_util_min, rq_util_max, cpu);
+	*overutilized = !rvh_util_fits_cpu(cpu_util(cpu), rq_util_min, rq_util_max, cpu);
 }
 
 unsigned long map_util_freq_pixel_mod(unsigned long util, unsigned long freq,

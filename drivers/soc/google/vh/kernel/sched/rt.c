@@ -144,7 +144,7 @@ static int find_least_loaded_cpu(struct task_struct *p, struct cpumask *lowest_m
 			util[cpu] += task_util(p);
 
 		task_fits[cpu] = rt_task_fits_capacity(p, cpu);
-		overutilize[cpu] = !util_fits_cpu(util[cpu],
+		overutilize[cpu] = !rvh_util_fits_cpu(util[cpu],
 						  rq_util_min, rq_util_max, cpu);
 
 		trace_sched_cpu_util_rt(cpu, capacity[cpu], util[cpu], exit_lat[cpu],
@@ -286,7 +286,7 @@ static inline bool rt_task_fits_capacity(struct task_struct *p, int cpu)
 	if (is_important && cpu < MID_CAPACITY_CPU)
 		return false;
 
-	return util_fits_cpu(util, uclamp_min, uclamp_max, cpu);
+	return rvh_util_fits_cpu(util, uclamp_min, uclamp_max, cpu);
 }
 
 static int find_lowest_rq(struct task_struct *p, struct cpumask *backup_mask)

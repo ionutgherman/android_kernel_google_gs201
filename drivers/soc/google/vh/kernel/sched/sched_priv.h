@@ -164,7 +164,7 @@ static inline unsigned long capacity_of(int cpu)
 	return cpu_rq(cpu)->cpu_capacity;
 }
 
-static inline int util_fits_cpu(unsigned long util,
+static inline int rvh_util_fits_cpu(unsigned long util,
 				unsigned long uclamp_min,
 				unsigned long uclamp_max,
 				int cpu)

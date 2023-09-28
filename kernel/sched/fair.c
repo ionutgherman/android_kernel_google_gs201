@@ -117,6 +117,23 @@ int __weak arch_asym_cpu_priority(int cpu)
  */
 #define fits_capacity(cap, max)	((cap) * 1280 < (max) * 1024)
 
+static inline int task_sched_capacity_margin(int cpu)
+{
+    if (cpu >= 0 && cpu < 8) {
+        unsigned int capacity_margin = 1280;
+        if (cpu >= 4 && cpu < 6) {
+            capacity_margin = 1462;
+        } else if (cpu >= 6) {
+            capacity_margin = 1575;
+        }
+        return capacity_margin;
+    } else {
+        return 1280;
+    }
+}
+
+#define is_cpu_overutilized(cap, max, cpu) ((cap) * task_sched_capacity_margin(cpu) > (max) << SCHED_CAPACITY_SHIFT)
+
 #endif
 
 #ifdef CONFIG_CFS_BANDWIDTH
@@ -4117,7 +4134,7 @@ static inline int util_fits_cpu(unsigned long util,
 	/*
 	 * Check if the real util fits without any uclamp boost/cap applied.
 	 */
-	fits = fits_capacity(util, capacity);
+	fits = !is_cpu_overutilized(util, capacity, cpu);
 
 	if (!uclamp_is_used())
 		return fits;
