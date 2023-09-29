@@ -456,12 +456,19 @@ static bool task_fits_capacity(struct task_struct *p, int cpu,  bool sync_boost)
 	unsigned long task_util = task_util_est(p);
 	bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
                             && (uclamp_boosted(p) || get_prefer_high_cap(p));
+    bool is_critical_task = is_important || sync_boost;
 
-	if (cpu >= MAX_CAPACITY_CPU)
+	if (cpu >= MAX_CAPACITY_CPU) {
 		return true;
+    }
 
-	if ((is_important || sync_boost) && cpu < MID_CAPACITY_CPU)
+    if (!is_critical_task && cpu < MID_CAPACITY_CPU) {
+        return true;
+    }
+
+	if (is_critical_task && cpu < MID_CAPACITY_CPU) {
 		return false;
+    }
 
 	/*
 	 * Ignore uclamp if spreading the task
