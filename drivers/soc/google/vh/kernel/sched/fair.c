@@ -1587,8 +1587,9 @@ void sched_newidle_balance_pixel_mod(void *data, struct rq *this_rq, struct rq_f
 
 	/*
 	 * Do not pull tasks towards !active CPUs...
+	 * Make sure we only pull tasks on near-idle CPUs and not on idle CPUs 
 	 */
-	if (!cpu_active(this_cpu) || this_cpu >= MID_CAPACITY_CPU)
+	if (!cpu_active(this_cpu) || this_cpu >= MID_CAPACITY_CPU || cpu_is_idle(this_cpu))
 		return;
 
 	/*
