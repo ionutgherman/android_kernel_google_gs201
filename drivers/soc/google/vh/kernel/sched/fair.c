@@ -1630,6 +1630,12 @@ void sched_newidle_balance_pixel_mod(void *data, struct rq *this_rq, struct rq_f
 
 		p = detach_important_task(src_rq, this_cpu);
 
+        if (p) {
+		    /* Skip this CPU if the source task cannot migrate */
+		    if (!cpumask_test_cpu(this_cpu, p->cpus_ptr))
+		        continue;
+		}
+
 		rq_unlock_irqrestore(src_rq, &src_rf);
 
 		if (p) {
