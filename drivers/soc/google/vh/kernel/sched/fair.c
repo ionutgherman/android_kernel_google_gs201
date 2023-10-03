@@ -1745,13 +1745,9 @@ static struct task_struct *detach_important_task(struct rq *src_rq, int dst_cpu)
 		if (!is_heavy_task)
 			continue;
 
-		if ((vp && vp->uclamp_fork_reset) 
-		    || uclamp_eff_value(p, UCLAMP_MIN) > 0 
-		    || is_heavy_task)
+	    if ((vp && vp->uclamp_fork_reset && is_heavy_task)
+	        || uclamp_eff_value(p, UCLAMP_MIN) > 0)
 			is_important = true;
-
-		if (!is_important)
-			continue;
 
 		if (task_fits_capacity(p, dst_cpu, false)) {
 			if (!task_fits_capacity(p, src_rq->cpu, false)) {
