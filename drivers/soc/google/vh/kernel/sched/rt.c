@@ -64,11 +64,20 @@ static inline void rt_task_fits_capacity(struct task_struct *p, int cpu,
 	unsigned long uclamp_min = uclamp_eff_value(p, UCLAMP_MIN);
 	unsigned long uclamp_max = uclamp_eff_value(p, UCLAMP_MAX);
 	unsigned long util = task_util(p);
+	bool is_important = (get_prefer_idle(p) || uclamp_latency_sensitive(p)) 
+                            && (uclamp_boosted(p) || get_prefer_high_cap(p));
+	bool is_critical_task = is_important || sync_boost;
 
-	if (get_prefer_high_cap(p) && cpu < MID_CAPACITY_CPU) {
-		*fits = false;
-		*fits_original = false;
-		return;
+	if (!is_critical_task && cpu < MID_CAPACITY_CPU) {
+	    *fits = true;
+	    *fits_original = true;
+	    return;
+	}
+
+	if (is_critical_task && cpu < MID_CAPACITY_CPU) {
+	    *fits = false;
+	    *fits_original = false;
+	    return;
 	}
 
 	*fits = util_fits_cpu(util, uclamp_min, uclamp_max, cpu);
